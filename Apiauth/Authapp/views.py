@@ -1,8 +1,15 @@
+from django.db.models import query
 from django.shortcuts import render
-from django.http import request, JsonResponse
-from rest_framework.parsers import JSONParser
+from rest_framework.response import Response
 from .serializer import UserLoginSerializer
 from .models import Login
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import serializers, viewsets
+from django.http import request
+from rest_framework.decorators import action
+from rest_framework.decorators import api_view
+
 
 # Create your views here.
 
@@ -10,18 +17,33 @@ def Home(request):
     return render(request,'index.html' )
 
 
-def Loginuser(request):
-     if request.method == "GET":
-        account = Login.objects.all()
-        serializer = UserLoginSerializer(account, many=True)
-        return JsonResponse(serializer.data, safe=False)
+class LoginUser(viewsets.ModelViewSet):
+    queryset=Login.objects.all()
+    serializer_class=UserLoginSerializer
 
-     elif request.method == "POST":
-        data = JSONParser().parse(request)
-        serializer = UserLoginSerializer(data=data)
+
+
+
+class ApiEg(APIView):
+    def get(self,request):
+        user= Login.objects.all()
+        serializer=UserLoginSerializer(user,many=True)
+        return Response(serializer.data)
+   
+    def post(self,request):
+        serializer=UserLoginSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data, status=201)
-        return JsonResponse(serializer.erros, status=400)
+            return Response(serializer.data)
+        else:
+            return Response(serializer.error)
+
+
+
+
+
+
+
+
 
 
